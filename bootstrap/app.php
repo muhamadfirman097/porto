@@ -16,6 +16,5 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })
-    ->usingStacks() // Pastikan menggunakan stack standar
     ->create()
-    ->useStoragePath(env('APP_STORAGE', base_path('storage'))); // Mengizinkan pengalihan path storage via ENV
+    ->useStoragePath(env('APP_STORAGE', base_path('storage')));
