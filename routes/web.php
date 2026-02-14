@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SkillController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ContactController;
+use Illuminate\Support\Facades\DB; // PENTING: Untuk fitur cek koneksi database
 
 /*
 |--------------------------------------------------------------------------
@@ -31,17 +32,60 @@ Route::get('/all-services', [HomeController::class, 'allServices'])->name('publi
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
 
+// --- AREA DEBUGGING (PENTING UNTUK VERCEL) ---
+// Route ini untuk mengecek apakah Database TiDB berhasil connect atau tidak.
+// Akses via browser: /cek-db
+Route::get('/cek-db', function () {
+    try {
+        // Coba ping database
+        if (DB::connection()->getPdo()) {
+            $dbName = DB::connection()->getDatabaseName();
+            $config = config('database.connections.mysql.options');
+            
+            // Cek path SSL yang dipakai sistem
+            $sslPath = isset($config[PDO::MYSQL_ATTR_SSL_CA]) ? $config[PDO::MYSQL_ATTR_SSL_CA] : 'Tidak diset';
+
+            return response()->json([
+                'status' => 'SUKSES',
+                'pesan' => 'Koneksi ke Database Berhasil!',
+                'database_name' => $dbName,
+                'ssl_debug' => [
+                    'path_yang_dipakai' => $sslPath,
+                    'apakah_file_ada' => file_exists($sslPath) ? 'YA, FILE DITEMUKAN' : 'TIDAK, FILE HILANG',
+                ]
+            ]);
+        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'GAGAL',
+            'pesan_error' => $e->getMessage(),
+            'debug_info' => [
+                'cek_lokasi_default_vercel' => file_exists('/etc/pki/tls/certs/ca-bundle.crt') ? 'ADA' : 'TIDAK ADA',
+                'cek_lokasi_ubuntu' => file_exists('/etc/ssl/certs/ca-certificates.crt') ? 'ADA' : 'TIDAK ADA',
+            ]
+        ], 500);
+    }
+});
+// ----------------------------------------------
+
+
 // --- HALAMAN ADMIN (Harus Login) ---
 Route::get('/dashboard', function () {
-    $totalProjects = \App\Models\Project::count();
-    $totalSkills = \App\Models\Skill::count();
-    $totalServices = \App\Models\Service::count();
-    $unreadMessages = \App\Models\Contact::where('is_read', false)->count();
-    
-    // AMBIL 5 PROJECT TERBARU
-    $recentProjects = \App\Models\Project::latest()->take(5)->get();
+    // Pastikan table sudah dimigrasi sebelum memanggil Model
+    try {
+        $totalProjects = \App\Models\Project::count();
+        $totalSkills = \App\Models\Skill::count();
+        $totalServices = \App\Models\Service::count();
+        $unreadMessages = \App\Models\Contact::where('is_read', false)->count();
+        
+        // AMBIL 5 PROJECT TERBARU
+        $recentProjects = \App\Models\Project::latest()->take(5)->get();
 
-    return view('dashboard', compact('totalProjects', 'totalSkills', 'totalServices', 'unreadMessages', 'recentProjects'));
+        return view('dashboard', compact('totalProjects', 'totalSkills', 'totalServices', 'unreadMessages', 'recentProjects'));
+    } catch (\Exception $e) {
+        // Jika database belum dimigrasi, tampilkan pesan ramah
+        return "Database terkoneksi tapi Tabel belum ada. Silakan jalankan 'php artisan migrate' di lokal lalu konek ke TiDB, atau cek route /cek-db untuk detail error.";
+    }
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -58,11 +102,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('projects', ProjectController::class);
 
     // Manajemen Skills (CRUD - Kecuali Show)
-    // Menggunakan 'except show' agar fungsi index, store, edit, update, destroy aktif
     Route::resource('skills', SkillController::class)->except(['show']);
 
     // Manajemen Services (CRUD - Saat ini hanya Index, Store, Destroy)
-    // Jika nanti mau fitur edit service, ganti 'only' jadi 'except show' seperti skills
     Route::resource('services', ServiceController::class)->only(['index', 'store', 'destroy']);
 
     // Manajemen Inbox / Pesan Masuk
