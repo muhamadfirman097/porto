@@ -58,11 +58,9 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            // Solusi Kompatibilitas TiDB untuk Windows & Linux (Vercel)
-            'options' => [
-                PDO::MYSQL_ATTR_SSL_CA => true,
+            'options' => array_filter([
                 PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
-            ],
+            ]),
         ],
 
         'mariadb' => [
