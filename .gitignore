@@ -41,4 +41,8 @@ Homestead.yaml
 # Bagian ini WAJIB ada untuk mencegah error "View not found" di Vercel.
 # Kita ignore semua file cache, TAPI tetap mempertahankan file .gitignore di dalamnya.
 /bootstrap/cache/*
+<<<<<<< HEAD
 !/bootstrap/cache/.gitignore
+=======
+!/bootstrap/cache/.gitignore
+>>>>>>> 9b7cf412cba8d305b9d4f6357e12b98e45e8fa2a
