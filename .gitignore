@@ -1,30 +1,44 @@
-*.log
-.DS_Store
+# --- DEPENDENCIES ---
+/node_modules
+/vendor
+
+# --- LARAVEL FRAMEWORK ---
 .env
 .env.backup
 .env.production
-.phpactor.json
 .phpunit.result.cache
+/.phpunit.cache
+/storage/*.key
+/storage/pail
+/auth.json
+
+# --- SYSTEM & IDE ---
+.DS_Store
+Thumbs.db
+*.log
 /.fleet
 /.idea
 /.nova
-/.phpunit.cache
 /.vscode
 /.zed
-/auth.json
-/node_modules
-
-# PERBAIKAN VERCEL: Hapus /public/build agar CSS & JS hasil compile ikut ter-push
-# /public/build
-
-/public/hot
-
-# PERBAIKAN VERCEL: Hapus /public/storage agar gambar project/logo ikut ter-push
-# /public/storage
-
-/storage/*.key
-/storage/pail
-/vendor
+.phpactor.json
 Homestead.json
 Homestead.yaml
-Thumbs.db
+
+# --- VERCEL & BUILD (MODIFIED) ---
+# Folder ini biasanya di-ignore, tapi Anda membukanya agar aset ter-upload
+/public/hot
+
+# PERBAIKAN VERCEL: Kami biarkan ini dikomentari (ada tanda #) 
+# agar CSS/JS hasil 'npm run build' di laptop Anda ikut ter-upload.
+# /public/build
+
+# PERBAIKAN VERCEL: Kami biarkan ini dikomentari (ada tanda #)
+# agar symlink atau file gambar di storage ikut ter-upload.
+# /public/storage
+
+# --- CRITICAL FIX FOR ERROR 500 ---
+# Bagian ini WAJIB ada untuk mencegah error "View not found" di Vercel.
+# Kita ignore semua file cache, TAPI tetap mempertahankan file .gitignore di dalamnya.
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
