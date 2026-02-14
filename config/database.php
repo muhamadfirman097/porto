@@ -59,6 +59,8 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => array_filter([
+                // Mengaktifkan SSL dengan menunjuk ke CA Certificate bawaan server (Vercel/Linux)
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA', '/etc/pki/tls/certs/ca-bundle.crt'),
                 PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
             ]),
         ],
