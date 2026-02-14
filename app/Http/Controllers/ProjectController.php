@@ -4,16 +4,25 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Services\ImgBBService; // Import Service ImgBB yang sudah dibuat
 
 class ProjectController extends Controller
 {
+    protected $imgBB;
+
+    /**
+     * Inject ImgBBService melalui constructor
+     */
+    public function __construct(ImgBBService $imgBB)
+    {
+        $this->imgBB = $imgBB;
+    }
+
     public function index(Request $request)
     {
-        // 1. Inisiasi Query
         $query = Project::query();
 
-        // 2. Logika Pencarian (Search by Title atau Description)
+        // 1. Logika Pencarian
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -22,16 +31,15 @@ class ProjectController extends Controller
             });
         }
 
-        // 3. Logika Filter by Tech Stack
+        // 2. Logika Filter by Tech Stack
         if ($request->filled('tech')) {
             $tech = $request->tech;
             $query->where('tech_stack', 'like', "%{$tech}%");
         }
 
-        // Ambil data yang sudah difilter, gunakan withQueryString agar saat pindah halaman, filternya tidak hilang
         $projects = $query->latest()->paginate(10)->withQueryString(); 
 
-        // 4. Mengambil daftar unik Tech Stack untuk Dropdown Admin
+        // 3. Mengambil daftar unik Tech Stack untuk Dropdown
         $allProjects = Project::select('tech_stack')->get();
         $allTechs = [];
         
@@ -41,18 +49,15 @@ class ProjectController extends Controller
                 foreach ($techs as $t) {
                     $cleanTech = trim($t);
                     if ($cleanTech != '') {
-                        // Merapikan teks (huruf besar di awal kata)
                         $allTechs[] = ucwords(strtolower($cleanTech)); 
                     }
                 }
             }
         }
         
-        // Hapus duplikat dan urutkan sesuai abjad
         $uniqueTechs = array_values(array_unique($allTechs));
         sort($uniqueTechs);
 
-        // Kirim data projects dan uniqueTechs ke view
         return view('admin.projects.index', compact('projects', 'uniqueTechs'));
     }
 
@@ -68,12 +73,19 @@ class ProjectController extends Controller
             'description' => 'required|string',
             'tech_stack' => 'nullable|string',
             'demo_url' => 'nullable|url',
-            'source_url' => 'nullable|url', // PERBAIKAN: Menggunakan source_url
+            'source_url' => 'nullable|url',
             'image' => 'required|image|max:2048',
         ]);
 
+        // LOGIKA UPLOAD IMGBB
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('projects', 'public');
+            $imageUrl = $this->imgBB->upload($request->file('image'));
+            
+            if (!$imageUrl) {
+                return back()->with('error', 'Gagal upload gambar ke ImgBB. Pastikan API Key benar.');
+            }
+            
+            $validated['image'] = $imageUrl;
         }
 
         Project::create($validated);
@@ -93,15 +105,21 @@ class ProjectController extends Controller
             'description' => 'required|string',
             'tech_stack' => 'nullable|string',
             'demo_url' => 'nullable|url',
-            'source_url' => 'nullable|url', // PERBAIKAN: Menggunakan source_url
+            'source_url' => 'nullable|url',
             'image' => 'nullable|image|max:2048',
         ]);
 
+        // LOGIKA UPDATE GAMBAR KE IMGBB
         if ($request->hasFile('image')) {
-            if ($project->image) {
-                Storage::disk('public')->delete($project->image);
+            $imageUrl = $this->imgBB->upload($request->file('image'));
+            
+            if (!$imageUrl) {
+                return back()->with('error', 'Gagal update gambar ke ImgBB.');
             }
-            $validated['image'] = $request->file('image')->store('projects', 'public');
+            
+            // Kita tidak perlu hapus gambar lama di ImgBB via API (karena gratis/unlimited)
+            // Cukup ganti link-nya di database.
+            $validated['image'] = $imageUrl;
         }
 
         $project->update($validated);
@@ -111,10 +129,7 @@ class ProjectController extends Controller
 
     public function destroy(Project $project)
     {
-        if ($project->image) {
-            Storage::disk('public')->delete($project->image);
-        }
-        
+        // Untuk ImgBB, kita biasanya cukup menghapus record di database
         $project->delete();
         
         return redirect()->route('projects.index')->with('success', 'Project dihapus.');
