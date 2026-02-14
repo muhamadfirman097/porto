@@ -47,12 +47,11 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => array_filter([
-                // Gunakan path SSL yang ditemukan tadi. 
-                // Jika tidak ketemu (null), driver akan mencoba default sistem.
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA', $ssl_ca),
+            'options' => [
+                // Path sertifikat standar server Vercel
+                PDO::MYSQL_ATTR_SSL_CA => '/etc/pki/tls/certs/ca-bundle.crt',
                 PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
-            ]),
+            ],
         ],
         
         // ... (sisanya biarkan default atau hapus kalau tidak dipakai) ...
