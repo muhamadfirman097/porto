@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use Illuminate\Http\Request;
-use App\Services\ImgBBService;
+use App\services\ImgBBService;
 
 class ProjectController extends Controller
 {
