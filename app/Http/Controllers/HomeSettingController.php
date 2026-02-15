@@ -5,9 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\HomeSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ImgBBService; // Import Service
 
 class HomeSettingController extends Controller
 {
+    protected $imgBB;
+
+    // Inject Service ImgBB
+    public function __construct(ImgBBService $imgBB)
+    {
+        $this->imgBB = $imgBB;
+    }
+
     public function edit()
     {
         // Menyiapkan data default jika database kosong
@@ -34,38 +43,37 @@ class HomeSettingController extends Controller
     {
         $setting = HomeSetting::first();
 
-        // 1. Validasi Input (Termasuk validasi cv_file)
+        // 1. Validasi Input
         $validated = $request->validate([
             'site_name' => 'required|string|max:50',
             'hero_title' => 'required|string|max:100',
             'hero_description' => 'nullable|string',
-            'profile_image' => 'nullable|image|max:2048',
-            'cv_file' => 'nullable|mimes:pdf|max:5120', // WAJIB PDF, Max 5MB
+            'profile_image' => 'nullable|image|max:2048', // Upload ke ImgBB
+            'cv_file' => 'nullable|mimes:pdf|max:5120', // TETAP LOCAL (Karena PDF)
             'primary_color' => 'required|string',
             'font_family' => 'required|in:sans,serif,mono',
-            
-            // Validasi Kontak
             'contact_email' => 'nullable|email',
             'contact_instagram' => 'nullable|string|max:255', 
             'contact_whatsapp' => 'nullable|numeric', 
             'contact_github' => 'nullable|url',
-            
             'footer_text' => 'required|string',
         ]);
 
-        // 2. Upload Foto Profil (Jika ada)
+        // 2. Upload Foto Profil (Ke ImgBB)
         if ($request->hasFile('profile_image')) {
-            // Hapus foto lama jika ada
-            if ($setting->profile_image) {
-                Storage::disk('public')->delete($setting->profile_image);
+            $imageUrl = $this->imgBB->upload($request->file('profile_image'));
+            
+            if ($imageUrl) {
+                // Simpan URL ImgBB ke database
+                $setting->profile_image = $imageUrl;
+            } else {
+                return back()->with('error', 'Gagal upload foto profil ke ImgBB.');
             }
-            // Simpan foto baru
-            $setting->profile_image = $request->file('profile_image')->store('profile', 'public');
         }
 
-        // 3. Upload File CV (Jika ada file baru yang diupload)
+        // 3. Upload File CV (Tetap Local Storage karena PDF)
         if ($request->hasFile('cv_file')) {
-            // Hapus file CV lama agar storage tidak menumpuk
+            // Hapus file CV lama
             if ($setting->cv_file) {
                 Storage::disk('public')->delete($setting->cv_file);
             }
@@ -73,19 +81,16 @@ class HomeSettingController extends Controller
             $setting->cv_file = $request->file('cv_file')->store('cv', 'public');
         }
 
-        // 4. Simpan Data Teks ke Database
+        // 4. Simpan Data Teks
         $setting->site_name = $request->site_name;
         $setting->hero_title = $request->hero_title;
         $setting->hero_description = $request->hero_description;
         $setting->primary_color = $request->primary_color;
         $setting->font_family = $request->font_family;
-        
-        // Simpan Kontak
         $setting->contact_email = $request->contact_email;
         $setting->contact_instagram = $request->contact_instagram;
         $setting->contact_whatsapp = $request->contact_whatsapp; 
         $setting->contact_github = $request->contact_github;
-        
         $setting->footer_text = $request->footer_text;
         
         $setting->save();

@@ -27,6 +27,10 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
+    
+    'imgbb' => [
+        'key' => env('IMGBB_API_KEY'),
+    ],
 
     'slack' => [
         'notifications' => [

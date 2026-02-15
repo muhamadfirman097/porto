@@ -4,10 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Skill;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage; // Pastikan ada ini
+use App\Services\ImgBBService; // Import Service
 
 class SkillController extends Controller
 {
+    protected $imgBB;
+
+    // Inject Service ImgBB
+    public function __construct(ImgBBService $imgBB)
+    {
+        $this->imgBB = $imgBB;
+    }
+
     public function index()
     {
         $skills = Skill::all();
@@ -19,11 +27,18 @@ class SkillController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'percentage' => 'required|integer|min:1|max:100',
-            'image' => 'nullable|image|max:1024',
+            'image' => 'nullable|image|max:2048', // Max 2MB (sesuai limit ImgBB free biasanya cukup besar, tapi 2MB aman)
         ]);
 
+        // LOGIKA UPLOAD IMGBB
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('skills', 'public');
+            $imageUrl = $this->imgBB->upload($request->file('image'));
+            
+            if (!$imageUrl) {
+                return back()->with('error', 'Gagal upload gambar ke ImgBB.');
+            }
+            
+            $validated['image'] = $imageUrl;
         }
 
         Skill::create($validated);
@@ -31,33 +46,33 @@ class SkillController extends Controller
         return redirect()->back()->with('success', 'Skill berhasil ditambahkan!');
     }
 
-    // --- TAMBAHAN BARU: EDIT ---
     public function edit(Skill $skill)
     {
         return view('admin.skills.edit', compact('skill'));
     }
 
-    // --- TAMBAHAN BARU: UPDATE ---
     public function update(Request $request, Skill $skill)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'percentage' => 'required|integer|min:1|max:100',
-            'image' => 'nullable|image|max:1024',
+            'image' => 'nullable|image|max:2048',
         ]);
 
-        // Simpan data text dulu
         $skill->name = $request->name;
         $skill->percentage = $request->percentage;
 
         // Cek jika ada upload gambar baru
         if ($request->hasFile('image')) {
-            // Hapus gambar lama jika ada
-            if ($skill->image) {
-                Storage::disk('public')->delete($skill->image);
+            $imageUrl = $this->imgBB->upload($request->file('image'));
+            
+            if (!$imageUrl) {
+                return back()->with('error', 'Gagal update gambar ke ImgBB.');
             }
-            // Simpan gambar baru
-            $skill->image = $request->file('image')->store('skills', 'public');
+            
+            // Update URL gambar
+            $skill->image = $imageUrl;
+            // Catatan: Gambar lama di ImgBB tidak perlu dihapus manual via API
         }
 
         $skill->save();
@@ -69,11 +84,9 @@ class SkillController extends Controller
     {
         $skill = Skill::findOrFail($id);
         
-        if ($skill->image) {
-            Storage::disk('public')->delete($skill->image);
-        }
-
+        // Hapus record saja, tidak perlu hapus file di storage lokal lagi
         $skill->delete();
+        
         return redirect()->back()->with('success', 'Skill dihapus.');
     }
 }

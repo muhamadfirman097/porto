@@ -4,9 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Service;
 use Illuminate\Http\Request;
+use App\Services\ImgBBService; // Import Service
 
 class ServiceController extends Controller
 {
+    protected $imgBB;
+
+    // Inject Service
+    public function __construct(ImgBBService $imgBB)
+    {
+        $this->imgBB = $imgBB;
+    }
+
     public function index()
     {
         $services = Service::all();
@@ -19,13 +28,19 @@ class ServiceController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'price' => 'nullable|string',
-            'tech_stack' => 'nullable|string', // Validasi Tech Stack
-            'image' => 'nullable|image|max:2048', // Validasi Gambar (Max 2MB)
+            'tech_stack' => 'nullable|string',
+            'image' => 'nullable|image|max:2048',
         ]);
 
-        // Upload Gambar jika ada
+        // LOGIKA UPLOAD IMGBB
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('services', 'public');
+            $imageUrl = $this->imgBB->upload($request->file('image'));
+            
+            if (!$imageUrl) {
+                return back()->with('error', 'Gagal upload gambar ke ImgBB.');
+            }
+            
+            $validated['image'] = $imageUrl;
         }
 
         Service::create($validated);
@@ -37,12 +52,9 @@ class ServiceController extends Controller
     {
         $service = Service::findOrFail($id);
         
-        // Hapus gambar dari penyimpanan jika ada
-        if ($service->image) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($service->image);
-        }
-
+        // Cukup hapus record database
         $service->delete();
+        
         return redirect()->back()->with('success', 'Layanan dihapus.');
     }
 }
