@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\HomeSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use App\Services\ImgBBService; // Import Service
+use App\services\ImgBBService; // Import Service
 
 class HomeSettingController extends Controller
 {
