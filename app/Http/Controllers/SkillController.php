@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Skill;
 use Illuminate\Http\Request;
-use App\Services\ImgBBService; // Import Service
+use App\services\ImgBBService; // Import Service
 
 class SkillController extends Controller
 {
