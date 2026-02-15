@@ -27,7 +27,6 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                             
-                            <!-- Kolom Kiri: Informasi Teks -->
                             <div class="space-y-6">
                                 
                                 <div>
@@ -102,18 +101,15 @@
 
                             </div>
 
-                            <!-- Kolom Kanan: Upload Gambar -->
                             <div class="space-y-6">
                                 <label class="block text-gray-700 text-sm font-bold mb-2">Thumbnail Project</label>
                                 
                                 <div class="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-300 text-center hover:border-indigo-500 transition group relative">
                                     
-                                    <!-- Logika Tampilan Gambar (ImgBB vs Storage Lokal) -->
                                     <div class="mb-4 relative overflow-hidden rounded-lg shadow-md border-4 border-white">
                                         @if($project->image)
-                                            <!-- PENTING: Cek apakah link ImgBB atau path lokal -->
                                             <img id="current-image" 
-                                                 src="{{ str_contains($project->image, 'http') ? $project->image : asset('storage/' . $project->image) }}" 
+                                                 src="{{ \Illuminate\Support\Str::startsWith($project->image, 'http') ? $project->image : asset('storage/' . $project->image) }}" 
                                                  class="w-full h-56 object-cover bg-white">
                                         @else
                                             <div class="w-full h-56 bg-gray-200 flex items-center justify-center text-gray-400">
@@ -121,14 +117,13 @@
                                             </div>
                                         @endif
                                         
-                                        <!-- Image Preview Container (Hidden by default) -->
                                         <img id="image-preview" class="hidden absolute inset-0 w-full h-full object-cover z-20">
                                     </div>
 
                                     <div class="relative z-10">
                                         <label for="image-upload" class="cursor-pointer inline-flex items-center px-5 py-2.5 bg-white border border-gray-300 rounded-xl font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 focus:outline-none transition ease-in-out duration-150">
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                            Ganti Gambar
+                                                Ganti Gambar
                                         </label>
                                         <input type="file" name="image" id="image-upload" class="hidden" accept="image/*" onchange="previewImage(event)">
                                         <p class="text-xs text-gray-400 mt-3">Biarkan kosong jika tidak ingin mengubah gambar.</p>

@@ -19,7 +19,9 @@
                 <div class="p-8 bg-white">
                     <form action="{{ route('skills.update', $skill->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        @method('PUT') <div class="mb-6">
+                        @method('PUT') 
+                        
+                        <div class="mb-6">
                             <label class="block text-gray-700 text-sm font-bold mb-2">Nama Skill</label>
                             <input type="text" name="name" value="{{ old('name', $skill->name) }}" class="w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
                         </div>
@@ -37,7 +39,10 @@
                             
                             @if($skill->image)
                                 <div class="mb-3 flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 w-fit">
-                                    <img src="{{ asset('storage/' . $skill->image) }}" class="h-10 w-10 object-contain">
+                                    {{-- PERBAIKAN DI SINI: Support ImgBB (http) dan Local Storage --}}
+                                    <img src="{{ \Illuminate\Support\Str::startsWith($skill->image, 'http') ? $skill->image : asset('storage/' . $skill->image) }}" 
+                                         class="h-10 w-10 object-contain"
+                                         alt="{{ $skill->name }}">
                                     <span class="text-xs text-gray-500">Logo Saat Ini</span>
                                 </div>
                             @endif

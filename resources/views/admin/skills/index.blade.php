@@ -79,7 +79,10 @@
                                 
                                 <div class="flex-shrink-0 h-12 w-12 rounded-lg bg-gray-50 flex items-center justify-center mr-4 overflow-hidden border border-gray-100 group-hover:bg-indigo-50 transition">
                                     @if($skill->image)
-                                        <img src="{{ asset('storage/' . $skill->image) }}" class="h-8 w-8 object-contain" alt="{{ $skill->name }}">
+                                        {{-- PERBAIKAN DI SINI: Support ImgBB (http) dan Local Storage --}}
+                                        <img src="{{ \Illuminate\Support\Str::startsWith($skill->image, 'http') ? $skill->image : asset('storage/' . $skill->image) }}" 
+                                             class="h-8 w-8 object-contain" 
+                                             alt="{{ $skill->name }}">
                                     @else
                                         <span class="text-lg font-bold text-indigo-500">{{ substr($skill->name, 0, 1) }}</span>
                                     @endif

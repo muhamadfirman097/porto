@@ -115,7 +115,10 @@
                     
                     <div class="relative h-48 md:h-56 overflow-hidden bg-gray-200">
                         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition z-10"></div>
-                        <img src="{{ asset('storage/' . $project->image) }}" alt="{{ $project->title }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        
+                        <img src="{{ \Illuminate\Support\Str::startsWith($project->image, 'http') ? $project->image : asset('storage/' . $project->image) }}" 
+                             alt="{{ $project->title }}" 
+                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                     </div>
 
                     <div class="p-6 md:p-8 flex flex-col flex-1">

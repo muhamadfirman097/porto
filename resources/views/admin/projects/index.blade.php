@@ -72,11 +72,14 @@
                                     <td class="px-6 py-4">
                                         <div class="flex items-center">
                                             <div class="flex-shrink-0 h-16 w-24 relative overflow-hidden rounded-lg border border-gray-200 group-hover:shadow-md transition">
-                                                <img class="h-full w-full object-cover transform group-hover:scale-105 transition duration-500" src="{{ asset('storage/' . $project->image) }}" alt="">
+                                                {{-- PERBAIKAN DI SINI: Cek apakah URL dari ImgBB (http) atau Storage Lokal --}}
+                                                <img class="h-full w-full object-cover transform group-hover:scale-105 transition duration-500" 
+                                                     src="{{ \Illuminate\Support\Str::startsWith($project->image, 'http') ? $project->image : asset('storage/' . $project->image) }}" 
+                                                     alt="{{ $project->title }}">
                                             </div>
                                             <div class="ml-4">
                                                 <div class="text-sm font-bold text-gray-900 line-clamp-1">{{ $project->title }}</div>
-                                                <div class="text-xs text-gray-500 mt-1 line-clamp-2 max-w-xs">{{ Str::limit($project->description, 60) }}</div>
+                                                <div class="text-xs text-gray-500 mt-1 line-clamp-2 max-w-xs">{{ \Illuminate\Support\Str::limit($project->description, 60) }}</div>
                                             </div>
                                         </div>
                                     </td>

@@ -81,7 +81,7 @@
                 <div class="absolute -inset-1 bg-gradient-to-r from-gray-200 to-gray-300 rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                 
                 <div class="relative w-full aspect-video bg-gray-100 rounded-[1.5rem] overflow-hidden shadow-2xl border border-gray-100">
-                    <img src="{{ asset('storage/' . $project->image) }}" 
+                    <img src="{{ \Illuminate\Support\Str::startsWith($project->image, 'http') ? $project->image : asset('storage/' . $project->image) }}" 
                          alt="{{ $project->title }}" 
                          class="w-full h-full object-cover transform transition duration-700 hover:scale-105">
                 </div>

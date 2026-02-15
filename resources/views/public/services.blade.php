@@ -55,7 +55,9 @@
                     
                     <div class="h-48 overflow-hidden relative bg-gray-100">
                         @if($service->image)
-                            <img src="{{ asset('storage/' . $service->image) }}" alt="{{ $service->title }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                            <img src="{{ \Illuminate\Support\Str::startsWith($service->image, 'http') ? $service->image : asset('storage/' . $service->image) }}" 
+                                 alt="{{ $service->title }}" 
+                                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
                         @else
                             <div class="flex items-center justify-center h-full bg-dynamic-light text-dynamic">
                                 <svg class="w-16 h-16 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>

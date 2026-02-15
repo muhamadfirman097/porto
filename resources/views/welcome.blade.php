@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{{ $home->site_name ?? 'Portofolio' }}</title>
     
-    <!-- PENTING: Meta tag untuk memaksa HTTPS agar style tidak berantakan di Vercel -->
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -99,7 +98,6 @@
                 </a>
                 
                 @if(isset($home->cv_file) && $home->cv_file)
-                <!-- CV biasanya file PDF/Doc, jadi tetap pakai asset storage kecuali kamu upload CV ke cloud juga -->
                 <a href="{{ asset('storage/' . $home->cv_file) }}" target="_blank" class="w-full sm:w-auto px-6 py-3.5 sm:py-4 bg-gray-900 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-gray-800 transition transform hover:-translate-y-1 text-center flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     Download CV
@@ -117,8 +115,7 @@
             <div class="relative w-56 h-56 sm:w-64 sm:h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-full p-2 sm:p-3 border-2 border-dashed border-dynamic/40">
                 <div class="w-full h-full rounded-full overflow-hidden shadow-glow relative z-10 bg-gray-100 border-4 border-white"> 
                     @if(isset($home->profile_image) && $home->profile_image)
-                        <!-- LOGIKA IMGBB: Cek apakah string mengandung 'http' -->
-                        <img src="{{ str_contains($home->profile_image, 'http') ? $home->profile_image : asset('storage/' . $home->profile_image) }}" alt="Profile" class="object-cover w-full h-full hover:scale-110 transition duration-700">
+                        <img src="{{ \Illuminate\Support\Str::startsWith($home->profile_image, 'http') ? $home->profile_image : asset('storage/' . $home->profile_image) }}" alt="Profile" class="object-cover w-full h-full hover:scale-110 transition duration-700">
                     @else
                         <img src="https://ui-avatars.com/api/?name={{ urlencode($home->site_name ?? 'User') }}&background=random&size=512" class="object-cover w-full h-full">
                     @endif
@@ -140,8 +137,7 @@
                     
                     <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-gray-50 flex items-center justify-center p-3 mb-3 transition-colors duration-300 group-hover:[background-color:var(--primary-light)]">
                         @if($skill->image)
-                            <!-- LOGIKA IMGBB -->
-                            <img src="{{ str_contains($skill->image, 'http') ? $skill->image : asset('storage/' . $skill->image) }}" alt="{{ $skill->name }}" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300">
+                            <img src="{{ \Illuminate\Support\Str::startsWith($skill->image, 'http') ? $skill->image : asset('storage/' . $skill->image) }}" alt="{{ $skill->name }}" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300">
                         @else
                             <span class="text-2xl font-bold text-gray-400 transition group-hover:[color:var(--primary-color)]">{{ substr($skill->name, 0, 1) }}</span>
                         @endif
@@ -173,8 +169,7 @@
                 <div class="bg-white rounded-3xl shadow-sm hover:shadow-xl transition duration-300 border border-gray-100 hover:-translate-y-1 group overflow-hidden flex flex-col h-full">
                     <div class="h-40 md:h-48 overflow-hidden relative bg-gray-100">
                         @if($service->image)
-                            <!-- LOGIKA IMGBB -->
-                            <img src="{{ str_contains($service->image, 'http') ? $service->image : asset('storage/' . $service->image) }}" alt="{{ $service->title }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                            <img src="{{ \Illuminate\Support\Str::startsWith($service->image, 'http') ? $service->image : asset('storage/' . $service->image) }}" alt="{{ $service->title }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
                         @else
                             <div class="flex items-center justify-center h-full bg-dynamic-light text-dynamic">
                                 <svg class="w-12 h-12 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
@@ -229,22 +224,17 @@
                 if(isset($projects)) {
                     foreach($projects as $p) {
                         if(!empty($p->tech_stack)) {
-                            // Pecah string berdasarkan koma
                             $techs = explode(',', $p->tech_stack);
                             foreach($techs as $t) {
-                                $cleanTech = trim($t); // Hapus spasi di awal/akhir
+                                $cleanTech = trim($t);
                                 if($cleanTech != '') {
-                                    // Rapikan teks (huruf besar di awal kata, cth: "react js" jadi "React Js")
                                     $allTechs[] = ucwords(strtolower($cleanTech));
                                 }
                             }
                         }
                     }
                 }
-                // Hapus nama tech stack yang dobel/duplikat
                 $uniqueTechs = array_values(array_unique($allTechs));
-                
-                // (Opsional) Batasi jumlah tombol filter maksimal 6 agar tidak kepanjangan
                 $filterTechs = array_slice($uniqueTechs, 0, 6); 
             @endphp
 
@@ -267,8 +257,7 @@
                 <div class="project-card relative group bg-white rounded-3xl shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-2 overflow-hidden flex flex-col border border-gray-100" data-category="{{ strtolower($project->tech_stack) }}">
                     <div class="relative h-48 md:h-56 overflow-hidden bg-gray-200">
                         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition z-10"></div>
-                        <!-- LOGIKA IMGBB -->
-                        <img src="{{ str_contains($project->image, 'http') ? $project->image : asset('storage/' . $project->image) }}" alt="{{ $project->title }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                        <img src="{{ \Illuminate\Support\Str::startsWith($project->image, 'http') ? $project->image : asset('storage/' . $project->image) }}" alt="{{ $project->title }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
                     </div>
                     
                     <div class="p-6 md:p-8 flex flex-col flex-1">
@@ -317,7 +306,6 @@
         </div>
     </section>
 
-    <!-- FORM KONTAK (Tidak Berubah) -->
     <section id="contact" class="py-20 md:py-24 bg-gray-50 border-t border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
             <div class="text-center mb-12 md:mb-16">

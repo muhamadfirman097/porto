@@ -104,7 +104,16 @@
                             </div>
                         </div>
 
-                    </div> <div class="lg:col-span-1 space-y-8">
+                        <div class="sticky top-4">
+                            <button type="submit" class="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition transform hover:-translate-y-1 flex justify-center items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                                Simpan Perubahan
+                            </button>
+                        </div>
+
+                    </div> 
+                    
+                    <div class="lg:col-span-1 space-y-8">
                         
                         <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100">
                             <div class="p-6 border-b border-gray-100 bg-gray-50/50">
@@ -114,7 +123,9 @@
                             <div class="p-6 text-center">
                                 <div class="relative w-32 h-32 mx-auto mb-4">
                                     @if($setting->profile_image)
-                                        <img src="{{ asset('storage/' . $setting->profile_image) }}" class="w-full h-full rounded-full object-cover border-4 border-white shadow-lg">
+                                        {{-- PERBAIKAN DI SINI: Support ImgBB (http) dan Local Storage --}}
+                                        <img src="{{ \Illuminate\Support\Str::startsWith($setting->profile_image, 'http') ? $setting->profile_image : asset('storage/' . $setting->profile_image) }}" 
+                                             class="w-full h-full rounded-full object-cover border-4 border-white shadow-lg">
                                     @else
                                         <div class="w-full h-full rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 text-3xl font-bold border-4 border-white shadow-lg">
                                             {{ substr($setting->site_name, 0, 1) }}
@@ -133,6 +144,7 @@
                                     @if($setting->cv_file)
                                         <div class="mb-4 flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100">
                                             <span class="text-xs font-semibold text-green-700">CV Aktif</span>
+                                            {{-- CV TETAP MENGGUNAKAN LOCAL STORAGE (KARENA PDF) --}}
                                             <a href="{{ asset('storage/' . $setting->cv_file) }}" target="_blank" class="text-xs text-indigo-600 hover:underline font-bold">Lihat File</a>
                                         </div>
                                     @endif
@@ -167,14 +179,8 @@
                             </div>
                         </div>
 
-                        <div class="sticky top-4">
-                            <button type="submit" class="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition transform hover:-translate-y-1 flex justify-center items-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                                Simpan Perubahan
-                            </button>
-                        </div>
-
-                    </div> </div>
+                    </div> 
+                </div>
             </form>
         </div>
     </div>
