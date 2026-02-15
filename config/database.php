@@ -2,10 +2,10 @@
 
 use Illuminate\Support\Str;
 
-// --- LOGIKA DETEKSI SSL OTOMATIS (AGAR TIDAK ERROR DI VERCEL) ---
+// --- LOGIKA DETEKSI SSL OTOMATIS (AGAR TIDAK ERROR DI VERCEL/LOCAL) ---
 $ssl_ca = null;
 $possible_paths = [
-    '/etc/pki/tls/certs/ca-bundle.crt', // Amazon Linux 2 (AWS Lambda / Vercel)
+    '/etc/pki/tls/certs/ca-bundle.crt', // Amazon Linux 2 (Vercel)
     '/etc/ssl/certs/ca-certificates.crt', // Ubuntu / Debian
     '/etc/ssl/cert.pem', // Alpine Linux
 ];
@@ -20,7 +20,7 @@ foreach ($possible_paths as $path) {
 
 return [
 
-    'default' => env('DB_CONNECTION', 'mysql'),
+    'default' => env('DB_CONNECTION', 'pgsql'),
 
     'connections' => [
 
@@ -41,34 +41,32 @@ return [
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
-            'charset' => env('DB_CHARSET', 'utf8mb4'),
-            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
             'prefix' => '',
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => [
-                // Path sertifikat standar server Vercel
-                PDO::MYSQL_ATTR_SSL_CA => '/etc/pki/tls/certs/ca-bundle.crt',
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => $ssl_ca,
                 PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
-            ],
+            ]) : [],
         ],
-        
-        // ... (sisanya biarkan default atau hapus kalau tidak dipakai) ...
+
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
+            'database' => env('DB_DATABASE', 'neondb'), 
+            'username' => env('DB_USERNAME', 'neondb_owner'),
             'password' => env('DB_PASSWORD', ''),
-            'charset' => env('DB_CHARSET', 'utf8'),
+            'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => env('DB_SSLMODE', 'prefer'),
+            'sslmode' => 'require', // Wajib untuk Neon
         ],
+
     ],
 
     'migrations' => [
@@ -80,7 +78,7 @@ return [
         'client' => env('REDIS_CLIENT', 'phpredis'),
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-database-'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
         ],
         'default' => [
             'url' => env('REDIS_URL'),
