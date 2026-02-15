@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use Illuminate\Http\Request;
-use App\Services\ImgBBService; // Import Service ImgBB yang sudah dibuat
+use App\Services\ImgBBService;
 
 class ProjectController extends Controller
 {
@@ -37,26 +37,25 @@ class ProjectController extends Controller
             $query->where('tech_stack', 'like', "%{$tech}%");
         }
 
+        // Ambil data (Paginate sangat penting untuk Vercel agar tidak timeout load semua data)
         $projects = $query->latest()->paginate(10)->withQueryString(); 
 
-        // 3. Mengambil daftar unik Tech Stack untuk Dropdown
-        $allProjects = Project::select('tech_stack')->get();
-        $allTechs = [];
+        // 3. OPTIMASI: Mengambil daftar Tech Stack Unik (Lebih Ringan)
+        // Kita gunakan pluck() agar tidak meload seluruh Model Project ke memori
+        $rawTechStacks = Project::pluck('tech_stack')->filter();
         
-        foreach ($allProjects as $p) {
-            if (!empty($p->tech_stack)) {
-                $techs = explode(',', $p->tech_stack);
-                foreach ($techs as $t) {
-                    $cleanTech = trim($t);
-                    if ($cleanTech != '') {
-                        $allTechs[] = ucwords(strtolower($cleanTech)); 
-                    }
-                }
-            }
-        }
-        
-        $uniqueTechs = array_values(array_unique($allTechs));
-        sort($uniqueTechs);
+        $uniqueTechs = $rawTechStacks
+            ->flatMap(function ($item) {
+                return explode(',', $item); // Pecah berdasarkan koma
+            })
+            ->map(function ($item) {
+                return ucwords(strtolower(trim($item))); // Rapikan spasi & huruf besar
+            })
+            ->filter() // Hapus yang kosong
+            ->unique() // Hapus duplikat
+            ->sort() // Urutkan A-Z
+            ->values() // Reset index array
+            ->all();
 
         return view('admin.projects.index', compact('projects', 'uniqueTechs'));
     }
@@ -74,7 +73,7 @@ class ProjectController extends Controller
             'tech_stack' => 'nullable|string',
             'demo_url' => 'nullable|url',
             'source_url' => 'nullable|url',
-            'image' => 'required|image|max:2048',
+            'image' => 'required|image|max:2048', // Max 2MB
         ]);
 
         // LOGIKA UPLOAD IMGBB
@@ -82,7 +81,7 @@ class ProjectController extends Controller
             $imageUrl = $this->imgBB->upload($request->file('image'));
             
             if (!$imageUrl) {
-                return back()->with('error', 'Gagal upload gambar ke ImgBB. Pastikan API Key benar.');
+                return back()->with('error', 'Gagal upload gambar ke ImgBB. Cek koneksi atau API Key.');
             }
             
             $validated['image'] = $imageUrl;
@@ -117,8 +116,7 @@ class ProjectController extends Controller
                 return back()->with('error', 'Gagal update gambar ke ImgBB.');
             }
             
-            // Kita tidak perlu hapus gambar lama di ImgBB via API (karena gratis/unlimited)
-            // Cukup ganti link-nya di database.
+            // Update link gambar baru
             $validated['image'] = $imageUrl;
         }
 
@@ -129,9 +127,7 @@ class ProjectController extends Controller
 
     public function destroy(Project $project)
     {
-        // Untuk ImgBB, kita biasanya cukup menghapus record di database
         $project->delete();
-        
         return redirect()->route('projects.index')->with('success', 'Project dihapus.');
     }
 }
